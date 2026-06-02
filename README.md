@@ -95,6 +95,12 @@ make clean
 make all
 ```
 
+### Revisión lingüística
+
+La [auditoría lingüística inicial](docs/linguistic-review.md) recoge las fuentes
+EPA utilizadas, las reglas ya cubiertas y las decisiones pendientes antes de
+ampliar el algoritmo.
+
 ## Requisitos
 
 - Python >= 3.10

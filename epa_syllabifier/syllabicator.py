@@ -5,14 +5,16 @@ Syllabification algorithm based on the alphabet of the Epa language.
 V_OPEN_BASE: set = {"a", "e", "o"}
 V_OPEN_ACCE: set = {"á", "é", "ó"}
 V_OPEN_CIRC: set = {"â", "ê", "ô"}
+V_OPEN_DIAC: set = {"à", "è", "ò"}
 
-V_OPEN_FULL: set = V_OPEN_BASE | V_OPEN_ACCE | V_OPEN_CIRC
+V_OPEN_FULL: set = V_OPEN_BASE | V_OPEN_ACCE | V_OPEN_CIRC | V_OPEN_DIAC
 
 V_CLOS_BASE: set = {"i", "u"}
 V_CLOS_ACCE: set = {"í", "ú"}
 V_CLOS_CIRC: set = {"î", "û"}
+V_CLOS_DIAC: set = {"ì", "ù"}
 
-V_CLOS_FULL: set = V_CLOS_BASE | V_CLOS_ACCE | V_CLOS_CIRC
+V_CLOS_FULL: set = V_CLOS_BASE | V_CLOS_ACCE | V_CLOS_CIRC | V_CLOS_DIAC
 
 V_FULL: set = V_OPEN_FULL | V_CLOS_FULL
 

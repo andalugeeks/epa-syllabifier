@@ -60,6 +60,12 @@ class TestSyllabifier(unittest.TestCase):
         self.assertEqual(syllabify("o"), ["o"])
         self.assertEqual(syllabify("u"), ["u"])
 
+    def test_diacritic_vowels(self):
+        """Test EPA grave-accented vowels"""
+        for vowel in ["à", "è", "ì", "ò", "ù"]:
+            with self.subTest(vowel=vowel):
+                self.assertEqual(syllabify(vowel), [vowel])
+
     def test_normalizes_word(self):
         """Test supported word normalization"""
         self.assertEqual(syllabify(" TOQUE "), ["to", "que"])
