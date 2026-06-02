@@ -7,7 +7,7 @@ name = "epa_syllabifier"
 version = "0.3.0"
 description = "Automatic syllabification module for Spanish words"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [
     { name = "Andalugeeks Team" }
@@ -20,8 +20,6 @@ classifiers = [
     "Topic :: Text Processing :: Linguistic",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -39,6 +37,7 @@ dependencies = []
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "build",
     "ipdb",
     "black",
     "commitizen>=3.0.0",
@@ -48,10 +47,13 @@ dev = [
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 
+[tool.black]
+target-version = ["py310"]
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 tag_format = "v$version"
 version_scheme = "pep440"
 version_provider = "pep621"
 update_changelog_on_bump = true
-major_version_zero = true 
+major_version_zero = true

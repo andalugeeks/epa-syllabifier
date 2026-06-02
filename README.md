@@ -10,6 +10,12 @@ Módulo Python para la silabificación de palabras.
 ['ar', 'can', 'çía']
 ```
 
+`syllabify()` procesa una única palabra EPA. La función normaliza las
+mayúsculas y los espacios exteriores. También admite guiones interiores,
+que se eliminan antes de aplicar las reglas de silabificación. Las frases,
+los números, la puntuación y los caracteres ajenos al alfabeto EPA producen
+un error `ValueError`.
+
 ## Desarrollo
 
 ### Instalación para desarrollo
@@ -69,8 +75,8 @@ make all
 
 ## Requisitos
 
-- Python >= 3.8
+- Python >= 3.10
 
 ## Licencia
 
-Este proyecto está licenciado bajo la Licencia GPL v3 - ver el archivo [LICENSE](LICENSE) para más detalles. 
+Este proyecto está licenciado bajo la Licencia GPL v3 - ver el archivo [LICENSE](LICENSE) para más detalles.

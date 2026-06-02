@@ -1,24 +1,12 @@
 # Makefile for the epa-syllabifier project
 
-.PHONY: help install install-dev test test-verbose test-coverage clean format lint all venv activate
+.PHONY: help venv activate ensure-venv install install-dev test test-verbose test-coverage format lint clean clean-venv build all dev-setup quick-test test-file
 
 # Variables
 VENV_DIR := .venv
 PYTHON := python3
-PIP := pip3
-PYTEST := pytest
-
-# Check if we're in a virtual environment, if not use venv if it exists
-ifdef VIRTUAL_ENV
-    VENV_PYTHON := python
-    VENV_PIP := pip
-else ifneq (,$(wildcard $(VENV_DIR)/bin/python))
-    VENV_PYTHON := $(VENV_DIR)/bin/python
-    VENV_PIP := $(VENV_DIR)/bin/pip
-else
-    VENV_PYTHON := $(PYTHON)
-    VENV_PIP := $(PIP)
-endif
+VENV_PYTHON := $(VENV_DIR)/bin/python
+VENV_PIP := $(VENV_PYTHON) -m pip
 
 # Colors for output
 GREEN := \033[0;32m
@@ -67,68 +55,31 @@ install-dev: ensure-venv ## Install development dependencies
 	@echo "$(GREEN)Installing development dependencies...$(NC)"
 	$(VENV_PIP) install -e ".[dev]"
 	@echo "$(YELLOW)Using virtual environment: $(VENV_DIR)$(NC)"
-	# add module install using editable mode
-	$(VENV_PIP) install -e ".[dev]"
 
 test: install-dev ## Run all tests
 	@echo "$(GREEN)Running tests...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m pytest tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m pytest tests/; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m pytest tests/
 
 test-verbose: install-dev ## Run tests with detailed output
 	@echo "$(GREEN)Running tests with detailed output...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m pytest -v tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m pytest -v tests/; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m pytest -v tests/
 
 test-coverage: install-dev ## Run tests with code coverage
 	@echo "$(GREEN)Running tests with coverage...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m pytest --cov=epa_syllabifier --cov-report=html --cov-report=term tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m pytest --cov=epa_syllabifier --cov-report=html --cov-report=term tests/; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m pytest --cov=epa_syllabifier --cov-report=html --cov-report=term tests/
 
-test-watch: install-dev ## Run tests in watch mode (requires pytest-watch)
-	@echo "$(GREEN)Running tests in watch mode...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m pytest --watch tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m pytest --watch tests/; \
-	fi
-
-format: ## Format code with black
+format: install-dev ## Format code with black
 	@echo "$(GREEN)Formatting code...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m black epa_syllabifier/ tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m black epa_syllabifier/ tests/; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m black epa_syllabifier/ tests/
 
-lint: ## Check code format
+lint: install-dev ## Check code format
 	@echo "$(GREEN)Checking code format...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m black --check epa_syllabifier/ tests/; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m black --check epa_syllabifier/ tests/; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m black --check epa_syllabifier/ tests/
 
 clean: ## Clean temporary files
 	@echo "$(GREEN)Cleaning temporary files...$(NC)"
@@ -145,41 +96,27 @@ clean-venv: ## Remove virtual environment
 	@echo "$(GREEN)Removing virtual environment...$(NC)"
 	rm -rf $(VENV_DIR)
 
-build: ## Build the package
+build: install-dev ## Build the package
 	@echo "$(GREEN)Building package...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m build; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m build; \
-	fi
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m build
 
-all: clean install-dev test ## Run cleanup, installation and tests
+all: clean test ## Run cleanup, installation and tests
 
 # Quick development commands
-dev-setup: venv install-dev ## Quick setup for development (create venv and install dev dependencies)
+dev-setup: install-dev ## Quick setup for development (create venv and install dev dependencies)
 	@echo "$(GREEN)Development setup completed$(NC)"
 	@echo "$(YELLOW)To activate the virtual environment, run:$(NC)"
 	@echo "  $(BLUE)source $(VENV_DIR)/bin/activate$(NC)"
 	@echo "$(YELLOW)Or use:$(NC)"
 	@echo "  $(BLUE)make activate$(NC)"
 
-quick-test: ## Quick test without detailed output
-	@if [ -d "$(VENV_DIR)" ]; then \
-		$(VENV_PYTHON) -m pytest tests/ -q; \
-	else \
-		$(PYTHON) -m pytest tests/ -q; \
-	fi
+quick-test: install-dev ## Quick test without detailed output
+	$(VENV_PYTHON) -m pytest tests/ -q
 
 # Command to run a specific test
 # Usage: make test-file FILE=test_syllabifier.py
 test-file: install-dev ## Run a specific test file (use FILE=filename)
 	@echo "$(GREEN)Running $(FILE)...$(NC)"
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"; \
-		$(VENV_PYTHON) -m pytest tests/$(FILE) -v; \
-	else \
-		echo "$(YELLOW)No virtual environment found, using system Python$(NC)"; \
-		$(PYTHON) -m pytest tests/$(FILE) -v; \
-	fi 
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m pytest tests/$(FILE) -v
