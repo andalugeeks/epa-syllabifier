@@ -1,27 +1,28 @@
 # EPA Syllabifier
 
-Módulo Python para la silabificación de palabras.
+Módulo Python para la silabificación de palabras y textos.
 
 ## Uso
 
 ```python
 >>> from epa_syllabifier import hyphenate, syllabify
 >>> syllabify("arcançía")
-['ar', 'can', 'çía']
->>> hyphenate("arcançía")
-'ar-can-çía'
+['ar', 'can', 'çí', 'a']
+>>> hyphenate("¡Andalûh EPA!")
+'¡an-da-lûh e-pa!'
 ```
 
 `syllabify()` procesa una única unidad de palabra y devuelve sus sílabas como
-lista. `hyphenate()` ofrece el mismo resultado como texto separado por guiones.
-Las funciones normalizan las mayúsculas y los espacios exteriores. También
-admiten guiones ortográficos interiores, como en `l-l`. `hyphenate()` devuelve
-las fronteras silábicas calculadas como guiones.
+lista. `hyphenate()` procesa texto completo y devuelve las fronteras silábicas
+calculadas como guiones, conservando la puntuación, los espacios y los saltos
+de línea. Las funciones normalizan las mayúsculas de las palabras analizadas.
+También admiten guiones ortográficos interiores, como en `l-l`.
 
 La librería no valida si la grafía recibida pertenece al estándar EPA:
 silabifica de forma tolerante préstamos, grafías heredadas y caracteres
-desconocidos. Las frases o entradas con espacios interiores producen un error
-`ValueError`, porque contienen más de una unidad de palabra.
+desconocidos. `syllabify()` produce un error `ValueError` con frases o entradas
+con espacios interiores; para procesar más de una palabra se utiliza
+`hyphenate()`.
 
 ## Desarrollo
 

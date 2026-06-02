@@ -2,6 +2,8 @@
 Syllabification algorithm based on the alphabet of the Epa language.
 """
 
+import re
+
 V_OPEN_BASE: set = {"a", "e", "o"}
 V_OPEN_ACCE: set = {"á", "é", "ó"}
 V_OPEN_CIRC: set = {"â", "ê", "ô"}
@@ -15,6 +17,7 @@ V_CLOS_CIRC: set = {"î", "û"}
 V_CLOS_DIAC: set = {"ì", "ù"}
 
 V_CLOS_FULL: set = V_CLOS_BASE | V_CLOS_ACCE | V_CLOS_CIRC | V_CLOS_DIAC
+V_CLOS_UNSTRESSED: set = V_CLOS_BASE | V_CLOS_CIRC | V_CLOS_DIAC
 
 V_FULL: set = V_OPEN_FULL | V_CLOS_FULL
 
@@ -37,6 +40,7 @@ C_FULL: set = (
 
 
 FULL_SET: set = V_FULL | C_FULL
+WORD_PATTERN = re.compile(r"[^\W_]+(?:-[^\W_]+)*", flags=re.UNICODE)
 
 
 def unpack_list(l: list[str | list[str]]) -> list[str]:
@@ -91,13 +95,66 @@ def syllabify(word: str) -> list[str]:
     return _syllabify_unit(word.replace("-", ""))
 
 
-def hyphenate(word: str) -> str:
+def hyphenate(text: str) -> str:
     """
-    Given a word, returns its syllables separated by hyphens.
-    Example: hyphenate("andalûh") -> "an-da-lûh"
+    Given a text, returns its syllables separated by hyphens.
+    Example: hyphenate("¡Andalûh EPA!") -> "¡an-da-lûh e-pa!"
     """
 
-    return "-".join(syllabify(word))
+    if not isinstance(text, str):
+        raise TypeError("text must be a string")
+
+    return WORD_PATTERN.sub(lambda match: "-".join(syllabify(match.group())), text)
+
+
+def _is_diphthong(first: str, second: str) -> bool:
+    if first in V_CLOS_ACCE or second in V_CLOS_ACCE:
+        return False
+
+    return first in V_CLOS_UNSTRESSED or second in V_CLOS_UNSTRESSED
+
+
+def _is_triphthong(first: str, second: str, third: str) -> bool:
+    return (
+        first in V_CLOS_UNSTRESSED
+        and second in V_OPEN_FULL
+        and third in V_CLOS_UNSTRESSED
+    )
+
+
+def _group_vowels(tokens: list[str]) -> list[str]:
+    grouped: list[str] = []
+    i: int = 0
+    while i < len(tokens):
+        if (
+            i + 2 < len(tokens)
+            and tokens[i][-1] in V_FULL
+            and tokens[i + 1][0] in V_FULL
+            and tokens[i + 2][0] in V_FULL
+            and _is_triphthong(
+                tokens[i][-1],
+                tokens[i + 1][0],
+                tokens[i + 2][0],
+            )
+        ):
+            grouped.append("".join(tokens[i : i + 3]))
+            i += 3
+            continue
+
+        if (
+            i + 1 < len(tokens)
+            and tokens[i][-1] in V_FULL
+            and tokens[i + 1][0] in V_FULL
+            and _is_diphthong(tokens[i][-1], tokens[i + 1][0])
+        ):
+            grouped.append("".join(tokens[i : i + 2]))
+            i += 2
+            continue
+
+        grouped.append(tokens[i])
+        i += 1
+
+    return grouped
 
 
 def _syllabify_unit(word: str) -> list[str]:
@@ -107,7 +164,7 @@ def _syllabify_unit(word: str) -> list[str]:
     x: list[str] = rule(x, "r", "r", "inclusive")  # rr
     x: list[str] = rule(x, C_OBST_LIQU, C_LIQU, "inclusive")  # /p, k, b, g, f/ + /r, l/
     x: list[str] = rule(x, C_PLOS_ALVE, C_LIQU_FLAP, "inclusive")  # /d, t/ + /r/
-    x: list[str] = rule(x, V_CLOS_FULL, V_OPEN_FULL, "exclusive")  # /i, u/ + /a, e, o/
+    x: list[str] = _group_vowels(x)
     x: list[str] = rule(x, C_FULL, V_FULL, "exclusive")  # CV
 
     # handles n and h in coda position

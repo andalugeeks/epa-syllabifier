@@ -92,15 +92,13 @@ test-matrix: check-uv ## Run tests across supported Python versions with uv
 		$(UV) run --python $$version --isolated --with pytest --no-project python -m pytest -q tests/; \
 	done
 
-format: install-dev ## Format code with black
-	@echo "$(GREEN)Formatting code...$(NC)"
-	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
-	$(VENV_PYTHON) -m black epa_syllabifier/ tests/
+format: check-uv ## Format code with black
+	@echo "$(GREEN)Formatting code with isolated Python $(CI_PYTHON)...$(NC)"
+	$(UV) run --python $(CI_PYTHON) --isolated --with black --no-project black epa_syllabifier/ tests/
 
-lint: install-dev ## Check code format
-	@echo "$(GREEN)Checking code format...$(NC)"
-	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
-	$(VENV_PYTHON) -m black --check epa_syllabifier/ tests/
+lint: check-uv ## Check code format
+	@echo "$(GREEN)Checking code format with isolated Python $(CI_PYTHON)...$(NC)"
+	$(UV) run --python $(CI_PYTHON) --isolated --with black --no-project black --check epa_syllabifier/ tests/
 
 check-whitespace: ## Check changed files for whitespace errors
 	git diff --check

@@ -2,9 +2,10 @@
 
 ## Alcance
 
-`epa-syllabifier` separa una única unidad de palabra. No transcribe castellano
-a EPA ni valida si la ortografía recibida pertenece a EPA. El análisis debe
-ser tolerante con préstamos, grafías heredadas y caracteres desconocidos.
+`epa-syllabifier` separa sílabas sin transcribir castellano a EPA ni validar si
+la ortografía recibida pertenece a EPA. El análisis debe ser tolerante con
+préstamos, grafías heredadas y caracteres desconocidos. `syllabify()` procesa
+una única unidad de palabra; `hyphenate()` admite texto completo.
 
 ## Fuentes
 
@@ -42,34 +43,34 @@ El algoritmo implementa una primera heurística útil:
 - Normaliza mayúsculas y espacios exteriores.
 - Admite guiones ortográficos interiores, como en `l-l`.
 - Acepta las vocales con acento agudo, circunflejo y grave.
+- Agrupa diptongos y triptongos; mantiene como hiato las secuencias con una
+  vocal cerrada acentuada.
 - Intenta silabificar préstamos y grafías no canónicas sin rechazarlos.
 - Ofrece listas de sílabas con `syllabify()` y texto separado por guiones con
-  `hyphenate()`.
+  `hyphenate()`, preservando puntuación, espacios y saltos de línea.
 
 Los tests exhaustivos garantizan que las combinaciones cortas del alfabeto
 admitido no producen excepciones, no pierden caracteres y no generan sílabas
 vacías. Esto comprueba estabilidad técnica, no corrección lingüística.
 
-## Decisiones pendientes
+## Decisiones adoptadas
 
 ### Secuencias vocálicas
 
-La implementación solo agrupa automáticamente una vocal cerrada seguida de
-una abierta. Antes de ampliar esta regla hay que confirmar los criterios EPA
-para diptongos, triptongos e hiatos.
+Las vocales cerradas átonas pueden formar diptongos con otra vocal y
+triptongos con el patrón cerrada-abierta-cerrada. Una vocal cerrada con acento
+agudo rompe el agrupamiento y forma hiato.
 
-| Entrada | Resultado actual | Resultado esperado |
-| --- | --- | --- |
-| `aire` | `a-i-re` | Pendiente |
-| `causa` | `ca-u-sa` | Pendiente |
-| `peine` | `pe-i-ne` | Pendiente |
-| `ciudá` | `ci-u-dá` | Pendiente |
-| `cuidao` | `cu-i-da-o` | Pendiente |
-| `guau` | `gua-u` | Pendiente |
-| `día` | `día` | Pendiente |
-| `tío` | `tío` | Pendiente |
-
-## Decisiones adoptadas
+| Entrada | Separación adoptada |
+| --- | --- |
+| `aire` | `ai-re` |
+| `causa` | `cau-sa` |
+| `peine` | `pei-ne` |
+| `ciudá` | `ciu-dá` |
+| `cuidao` | `cui-da-o` |
+| `guau` | `guau` |
+| `día` | `dí-a` |
+| `tío` | `tí-o` |
 
 ### Validación ortográfica
 
@@ -84,6 +85,13 @@ ortográfico durante el cálculo para poder repartir la geminación correctament
 `syllabify("ponêl-lo")` devuelve `["po", "nêl", "lo"]` y
 `hyphenate("ponêl-lo")` devuelve `"po-nêl-lo"`, con las fronteras silábicas
 representadas como guiones.
+
+### Texto completo
+
+`syllabify()` conserva su contrato de una sola unidad de palabra y devuelve una
+lista de sílabas. `hyphenate()` recorre texto completo y conserva separadores
+como puntuación, espacios y saltos de línea. Por ejemplo,
+`hyphenate("¡Andalûh EPA!")` devuelve `"¡an-da-lûh e-pa!"`.
 
 ## Ampliación del corpus
 

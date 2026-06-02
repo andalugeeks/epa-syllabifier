@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "epa_syllabifier"
 version = "0.3.0"
-description = "Automatic syllabification module for Spanish words"
+description = "Automatic syllabification module for EPA words and texts"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]

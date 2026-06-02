@@ -76,10 +76,33 @@ class TestSyllabifier(unittest.TestCase):
         self.assertEqual(hyphenate("andalûh"), "an-da-lûh")
         self.assertEqual(hyphenate("ponêl-lo"), "po-nêl-lo")
 
+    def test_hyphenates_text_preserving_separators(self):
+        """Test full text output while preserving punctuation and whitespace"""
+        self.assertEqual(hyphenate("¡Andalûh EPA!"), "¡an-da-lûh e-pa!")
+        self.assertEqual(hyphenate("Hola, mundo.\nEPA"), "ho-la, mun-do.\ne-pa")
+
+    def test_confirmed_vowel_sequences(self):
+        """Test EPA vowel nuclei confirmed during linguistic review"""
+        examples = {
+            "aire": ["ai", "re"],
+            "causa": ["cau", "sa"],
+            "peine": ["pei", "ne"],
+            "ciudá": ["ciu", "dá"],
+            "cuidao": ["cui", "da", "o"],
+            "guau": ["guau"],
+            "día": ["dí", "a"],
+            "tío": ["tí", "o"],
+        }
+        for word, expected_syllables in examples.items():
+            with self.subTest(word=word):
+                self.assertEqual(syllabify(word), expected_syllables)
+
     def test_rejects_non_string_input(self):
         """Test input type validation"""
         with self.assertRaisesRegex(TypeError, "word must be a string"):
             syllabify(None)
+        with self.assertRaisesRegex(TypeError, "text must be a string"):
+            hyphenate(None)
 
     def test_rejects_multiple_units(self):
         """Test that only one word is accepted"""
