@@ -2,9 +2,9 @@
 
 ## Alcance
 
-`epa-syllabifier` separa una única palabra ya escrita en Andalûh EPA. No
-transcribe castellano a EPA y no pretende validar por sí solo toda la
-ortografía de entrada.
+`epa-syllabifier` separa una única unidad de palabra. No transcribe castellano
+a EPA ni valida si la ortografía recibida pertenece a EPA. El análisis debe
+ser tolerante con préstamos, grafías heredadas y caracteres desconocidos.
 
 ## Fuentes
 
@@ -39,8 +39,12 @@ El algoritmo implementa una primera heurística útil:
 - Trata `n`, `h`, `r` y `m` en posición de coda.
 - Reparte consonantes geminadas entre la coda de una sílaba y el ataque de la
   siguiente: `âtta` se separa como `ât-ta`.
-- Normaliza mayúsculas, espacios exteriores y guiones interiores.
+- Normaliza mayúsculas y espacios exteriores.
+- Admite guiones ortográficos interiores, como en `l-l`.
 - Acepta las vocales con acento agudo, circunflejo y grave.
+- Intenta silabificar préstamos y grafías no canónicas sin rechazarlos.
+- Ofrece listas de sílabas con `syllabify()` y texto separado por guiones con
+  `hyphenate()`.
 
 Los tests exhaustivos garantizan que las combinaciones cortas del alfabeto
 admitido no producen excepciones, no pierden caracteres y no generan sílabas
@@ -65,27 +69,21 @@ para diptongos, triptongos e hiatos.
 | `día` | `día` | Pendiente |
 | `tío` | `tío` | Pendiente |
 
+## Decisiones adoptadas
+
 ### Validación ortográfica
 
-El silabificador comprueba caracteres, pero no valida todavía todas las
-combinaciones ortográficas. Por ejemplo, agrupa `qu` sin limitar expresamente
-la vocal posterior. Hay que decidir si esta librería debe rechazar grafías no
-canónicas o limitarse a silabificarlas.
-
-### Extensiones y préstamos
-
-La implementación histórica admite `s`, `z` y `k` por compatibilidad. La
-propuesta EPA publicada no las incluye en su inventario estándar. El lemario
-de `andaluh-py` también conserva `w` en algunos préstamos, mientras que el
-silabificador la rechaza. Hay que decidir si la API cubre únicamente EPA
-canónico o también préstamos y grafías heredadas.
+El silabificador no rechaza grafías no canónicas. Por ejemplo, puede procesar
+préstamos con `w` o caracteres desconocidos. Su responsabilidad es intentar
+separar una unidad de palabra, no certificar su pertenencia a EPA.
 
 ### Guiones interiores
 
-EPA emplea `l-l` para representar la doble `l`. La API actual admite guiones
-interiores, los elimina durante el cálculo y devuelve sílabas sin guion:
-`ponêl-lo` se convierte en `po-nêl-lo`. Hay que confirmar si esta salida es la
-deseada o si debe conservarse información ortográfica adicional.
+EPA emplea `l-l` para representar la doble `l`. El análisis elimina ese guion
+ortográfico durante el cálculo para poder repartir la geminación correctamente.
+`syllabify("ponêl-lo")` devuelve `["po", "nêl", "lo"]` y
+`hyphenate("ponêl-lo")` devuelve `"po-nêl-lo"`, con las fronteras silábicas
+representadas como guiones.
 
 ## Ampliación del corpus
 

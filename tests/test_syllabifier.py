@@ -6,7 +6,7 @@ import unittest
 import csv
 import os
 import epa_syllabifier
-from epa_syllabifier import syllabify
+from epa_syllabifier import hyphenate, syllabify
 
 
 class TestSyllabifier(unittest.TestCase):
@@ -71,26 +71,30 @@ class TestSyllabifier(unittest.TestCase):
         self.assertEqual(syllabify(" TOQUE "), ["to", "que"])
         self.assertEqual(syllabify("ûl-lero"), ["ûl", "le", "ro"])
 
+    def test_hyphenates_word(self):
+        """Test textual output with syllable separators"""
+        self.assertEqual(hyphenate("andalûh"), "an-da-lûh")
+        self.assertEqual(hyphenate("ponêl-lo"), "po-nêl-lo")
+
     def test_rejects_non_string_input(self):
         """Test input type validation"""
         with self.assertRaisesRegex(TypeError, "word must be a string"):
             syllabify(None)
 
-    def test_rejects_invalid_words(self):
-        """Test that only one EPA word is accepted"""
-        invalid_words = [
-            "hola mundo",
-            "123",
-            "hola!",
-            "-andalûh",
-            "andalûh-",
-            "anda--lûh",
-        ]
-
-        for word in invalid_words:
+    def test_rejects_multiple_units(self):
+        """Test that only one word is accepted"""
+        for word in ["hola mundo", "hola\tmundo", "hola\nmundo"]:
             with self.subTest(word=word):
                 with self.assertRaises(ValueError):
                     syllabify(word)
+
+    def test_accepts_words_without_validating_their_spelling(self):
+        """Test that spelling validation is outside the syllabifier scope"""
+        for word in ["darwiniano", "Washington", "hola!", "123"]:
+            with self.subTest(word=word):
+                syllables = syllabify(word)
+                self.assertEqual("".join(syllables), word.lower())
+                self.assertTrue(all(syllables))
 
     def test_gemination_regressions(self):
         """Test that gemination processing never leaves empty fragments"""
@@ -102,7 +106,7 @@ class TestSyllabifier(unittest.TestCase):
 
     def test_public_api(self):
         """Test the package public API"""
-        self.assertEqual(epa_syllabifier.__all__, ["syllabify"])
+        self.assertEqual(epa_syllabifier.__all__, ["hyphenate", "syllabify"])
 
 
 def generate_individual_tests():

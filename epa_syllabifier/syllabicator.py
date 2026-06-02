@@ -72,28 +72,36 @@ def rule(w: list[str], lower, upper, range) -> list[str]:
     return unpack_list(l)
 
 
-def syllabify(x: str) -> list[str]:
+def syllabify(word: str) -> list[str]:
     """
-    Given a string in EPA, splits by syllables.
+    Given a word, splits it by syllables.
     Example: syllabify("andalûh") -> ['an', 'da', 'lûh']
     """
 
-    if not isinstance(x, str):
+    if not isinstance(word, str):
         raise TypeError("word must be a string")
 
-    x: str = x.lower().strip()
-    if len(x) == 0:
+    word = word.lower().strip()
+    if len(word) == 0:
         return []
 
-    if "-" in x and any(len(part) == 0 for part in x.split("-")):
-        raise ValueError("hyphens are only allowed inside an EPA word")
+    if any(character.isspace() for character in word):
+        raise ValueError("word must be a single unit without whitespace")
 
-    x: str = x.replace("-", "")
-    invalid_characters: set[str] = set(x) - FULL_SET
-    if invalid_characters:
-        raise ValueError("word must contain only EPA alphabet characters")
+    return _syllabify_unit(word.replace("-", ""))
 
-    x: list[str] = list(x)
+
+def hyphenate(word: str) -> str:
+    """
+    Given a word, returns its syllables separated by hyphens.
+    Example: hyphenate("andalûh") -> "an-da-lûh"
+    """
+
+    return "-".join(syllabify(word))
+
+
+def _syllabify_unit(word: str) -> list[str]:
+    x: list[str] = list(word)
 
     x: list[str] = rule(x, "q", "u", "inclusive")  # qu
     x: list[str] = rule(x, "r", "r", "inclusive")  # rr
