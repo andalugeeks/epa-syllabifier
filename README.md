@@ -49,7 +49,29 @@ make test-verbose
 
 # Ejecutar tests
 make quick-test
+
+# Ejecutar únicamente el barrido exhaustivo de propiedades
+make test-properties
 ```
+
+`make quick-test` omite el barrido exhaustivo para facilitar iteraciones rápidas.
+El resto de objetivos de test incluye las propiedades permanentes del
+silabificador: toda combinación de hasta cuatro caracteres EPA debe procesarse
+sin excepciones, sin sílabas vacías y sin perder caracteres.
+
+### CI local
+
+Antes de guardar un checkpoint relevante en Git, ejecuta:
+
+```bash
+make ci-local
+```
+
+Este comando limpia artefactos temporales, comprueba espacios sobrantes y
+formato, ejecuta cobertura, prueba la suite con Python 3.10, 3.11, 3.12 y 3.13,
+y construye la distribución. La ejecución utiliza
+[`uv`](https://docs.astral.sh/uv/), que instala entornos aislados cuando son
+necesarios.
 
 ### Comandos útiles de desarrollo
 

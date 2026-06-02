@@ -46,6 +46,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+markers = [
+    "properties: exhaustive invariants over EPA alphabet combinations",
+]
 
 [tool.black]
 target-version = ["py310"]

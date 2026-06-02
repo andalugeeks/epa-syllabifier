@@ -1,12 +1,15 @@
 # Makefile for the epa-syllabifier project
 
-.PHONY: help venv activate ensure-venv install install-dev test test-verbose test-coverage format lint clean clean-venv build all dev-setup quick-test test-file
+.PHONY: help venv activate ensure-venv check-uv install install-dev test test-verbose test-coverage test-properties test-matrix format lint check-whitespace clean clean-venv build ci-local all dev-setup quick-test test-file
 
 # Variables
 VENV_DIR := .venv
 PYTHON := python3
 VENV_PYTHON := $(VENV_DIR)/bin/python
 VENV_PIP := $(VENV_PYTHON) -m pip
+UV := uv
+CI_PYTHON := 3.13
+SUPPORTED_PYTHONS := 3.10 3.11 3.12 3.13
 
 # Colors for output
 GREEN := \033[0;32m
@@ -46,6 +49,12 @@ ensure-venv:
 		make venv; \
 	fi
 
+check-uv:
+	@command -v $(UV) >/dev/null 2>&1 || { \
+		echo "$(YELLOW)uv is required for the local Python test matrix. Install it from https://docs.astral.sh/uv/$(NC)"; \
+		exit 1; \
+	}
+
 install: ensure-venv ## Install basic project dependencies
 	@echo "$(GREEN)Installing basic dependencies...$(NC)"
 	$(VENV_PIP) install -e .
@@ -71,6 +80,18 @@ test-coverage: install-dev ## Run tests with code coverage
 	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
 	$(VENV_PYTHON) -m pytest --cov=epa_syllabifier --cov-report=html --cov-report=term tests/
 
+test-properties: install-dev ## Run exhaustive syllabifier property tests
+	@echo "$(GREEN)Running exhaustive syllabifier property tests...$(NC)"
+	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
+	$(VENV_PYTHON) -m pytest -q -m properties tests/
+
+test-matrix: check-uv ## Run tests across supported Python versions with uv
+	@set -e; \
+	for version in $(SUPPORTED_PYTHONS); do \
+		echo "$(GREEN)Running tests with Python $$version...$(NC)"; \
+		$(UV) run --python $$version --isolated --with pytest --no-project python -m pytest -q tests/; \
+	done
+
 format: install-dev ## Format code with black
 	@echo "$(GREEN)Formatting code...$(NC)"
 	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
@@ -80,6 +101,10 @@ lint: install-dev ## Check code format
 	@echo "$(GREEN)Checking code format...$(NC)"
 	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
 	$(VENV_PYTHON) -m black --check epa_syllabifier/ tests/
+
+check-whitespace: ## Check changed files for whitespace errors
+	git diff --check
+	git diff --cached --check
 
 clean: ## Clean temporary files
 	@echo "$(GREEN)Cleaning temporary files...$(NC)"
@@ -101,7 +126,16 @@ build: install-dev ## Build the package
 	@echo "$(BLUE)Using virtual environment: $(VENV_DIR)$(NC)"
 	$(VENV_PYTHON) -m build
 
-all: clean test ## Run cleanup, installation and tests
+ci-local: clean check-uv check-whitespace ## Run the complete local CI suite
+	@echo "$(GREEN)Checking code format with isolated Python $(CI_PYTHON)...$(NC)"
+	$(UV) run --python $(CI_PYTHON) --isolated --with black --no-project black --check epa_syllabifier/ tests/
+	@echo "$(GREEN)Running coverage with isolated Python $(CI_PYTHON)...$(NC)"
+	$(UV) run --python $(CI_PYTHON) --isolated --with pytest --with pytest-cov --no-project python -m pytest --cov=epa_syllabifier --cov-report=term tests/
+	$(MAKE) test-matrix
+	@echo "$(GREEN)Building package with isolated Python $(CI_PYTHON)...$(NC)"
+	$(UV) run --python $(CI_PYTHON) --isolated --with build --no-project python -m build
+
+all: ci-local ## Run the complete local CI suite
 
 # Quick development commands
 dev-setup: install-dev ## Quick setup for development (create venv and install dev dependencies)
@@ -112,7 +146,7 @@ dev-setup: install-dev ## Quick setup for development (create venv and install d
 	@echo "  $(BLUE)make activate$(NC)"
 
 quick-test: install-dev ## Quick test without detailed output
-	$(VENV_PYTHON) -m pytest tests/ -q
+	$(VENV_PYTHON) -m pytest -q -m "not properties" tests/
 
 # Command to run a specific test
 # Usage: make test-file FILE=test_syllabifier.py
