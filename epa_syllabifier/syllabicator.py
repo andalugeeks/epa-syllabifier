@@ -41,6 +41,7 @@ C_FULL: set = (
 
 FULL_SET: set = V_FULL | C_FULL
 WORD_PATTERN = re.compile(r"[^\W_]+(?:-[^\W_]+)*", flags=re.UNICODE)
+SYLLABLE_SEPARATOR = "·"
 
 
 def unpack_list(l: list[str | list[str]]) -> list[str]:
@@ -97,14 +98,43 @@ def syllabify(word: str) -> list[str]:
 
 def hyphenate(text: str) -> str:
     """
-    Given a text, returns its syllables separated by hyphens.
-    Example: hyphenate("¡Andalûh EPA!") -> "¡an-da-lûh e-pa!"
+    Given a text, returns its syllables separated by interpuncts.
+    Example: hyphenate("¡Andalûh EPA!") -> "¡an·da·lûh e·pa!"
     """
 
     if not isinstance(text, str):
         raise TypeError("text must be a string")
 
-    return WORD_PATTERN.sub(lambda match: "-".join(syllabify(match.group())), text)
+    return WORD_PATTERN.sub(lambda match: _hyphenate_word(match.group()), text)
+
+
+def _hyphenate_word(word: str) -> str:
+    syllable_boundaries: set[int] = set()
+    position: int = 0
+    for syllable in syllabify(word)[:-1]:
+        position += len(syllable)
+        syllable_boundaries.add(position)
+
+    orthographic_boundaries: set[int] = set()
+    position = 0
+    for character in word:
+        if character == "-":
+            orthographic_boundaries.add(position)
+        else:
+            position += 1
+
+    rendered: list[str] = []
+    position = 0
+    for character in word.lower():
+        if character == "-":
+            rendered.append(character)
+            continue
+        if position in syllable_boundaries and position not in orthographic_boundaries:
+            rendered.append(SYLLABLE_SEPARATOR)
+        rendered.append(character)
+        position += 1
+
+    return "".join(rendered)
 
 
 def _is_diphthong(first: str, second: str) -> bool:

@@ -73,13 +73,18 @@ class TestSyllabifier(unittest.TestCase):
 
     def test_hyphenates_word(self):
         """Test textual output with syllable separators"""
-        self.assertEqual(hyphenate("andalûh"), "an-da-lûh")
-        self.assertEqual(hyphenate("ponêl-lo"), "po-nêl-lo")
+        self.assertEqual(hyphenate("andalûh"), "an·da·lûh")
+        self.assertEqual(hyphenate("ponêl-lo"), "po·nêl-lo")
 
     def test_hyphenates_text_preserving_separators(self):
         """Test full text output while preserving punctuation and whitespace"""
-        self.assertEqual(hyphenate("¡Andalûh EPA!"), "¡an-da-lûh e-pa!")
-        self.assertEqual(hyphenate("Hola, mundo.\nEPA"), "ho-la, mun-do.\ne-pa")
+        self.assertEqual(hyphenate("¡Andalûh EPA!"), "¡an·da·lûh e·pa!")
+        self.assertEqual(hyphenate("Hola, mundo.\nEPA"), "ho·la, mun·do.\ne·pa")
+
+    def test_hyphenates_text_preserving_orthographic_hyphens(self):
+        """Test that EPA orthographic hyphens remain distinguishable"""
+        self.assertEqual(hyphenate("âl-lequín, câl-lô"), "âl-le·quín, câl-lô")
+        self.assertEqual(hyphenate("a-b"), "a-b")
 
     def test_confirmed_vowel_sequences(self):
         """Test EPA vowel nuclei confirmed during linguistic review"""

@@ -46,8 +46,9 @@ El algoritmo implementa una primera heurística útil:
 - Agrupa diptongos y triptongos; mantiene como hiato las secuencias con una
   vocal cerrada acentuada.
 - Intenta silabificar préstamos y grafías no canónicas sin rechazarlos.
-- Ofrece listas de sílabas con `syllabify()` y texto separado por guiones con
-  `hyphenate()`, preservando puntuación, espacios y saltos de línea.
+- Ofrece listas de sílabas con `syllabify()` y texto separado por interpunctos
+  con `hyphenate()`, preservando puntuación, espacios, saltos de línea y
+  guiones ortográficos.
 
 Los tests exhaustivos garantizan que las combinaciones cortas del alfabeto
 admitido no producen excepciones, no pierden caracteres y no generan sílabas
@@ -63,14 +64,14 @@ agudo rompe el agrupamiento y forma hiato.
 
 | Entrada | Separación adoptada |
 | --- | --- |
-| `aire` | `ai-re` |
-| `causa` | `cau-sa` |
-| `peine` | `pei-ne` |
-| `ciudá` | `ciu-dá` |
-| `cuidao` | `cui-da-o` |
+| `aire` | `ai·re` |
+| `causa` | `cau·sa` |
+| `peine` | `pei·ne` |
+| `ciudá` | `ciu·dá` |
+| `cuidao` | `cui·da·o` |
 | `guau` | `guau` |
-| `día` | `dí-a` |
-| `tío` | `tí-o` |
+| `día` | `dí·a` |
+| `tío` | `tí·o` |
 
 ### Validación ortográfica
 
@@ -83,15 +84,16 @@ separar una unidad de palabra, no certificar su pertenencia a EPA.
 EPA emplea `l-l` para representar la doble `l`. El análisis elimina ese guion
 ortográfico durante el cálculo para poder repartir la geminación correctamente.
 `syllabify("ponêl-lo")` devuelve `["po", "nêl", "lo"]` y
-`hyphenate("ponêl-lo")` devuelve `"po-nêl-lo"`, con las fronteras silábicas
-representadas como guiones.
+`hyphenate("ponêl-lo")` devuelve `"po·nêl-lo"`. `hyphenate()` conserva los
+guiones ortográficos existentes y representa las fronteras silábicas
+calculadas con interpunctos (`·`) para que ambas funciones sean distinguibles.
 
 ### Texto completo
 
 `syllabify()` conserva su contrato de una sola unidad de palabra y devuelve una
 lista de sílabas. `hyphenate()` recorre texto completo y conserva separadores
 como puntuación, espacios y saltos de línea. Por ejemplo,
-`hyphenate("¡Andalûh EPA!")` devuelve `"¡an-da-lûh e-pa!"`.
+`hyphenate("¡Andalûh EPA!")` devuelve `"¡an·da·lûh e·pa!"`.
 
 ## Ampliación del corpus
 

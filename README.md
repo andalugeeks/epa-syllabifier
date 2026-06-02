@@ -9,14 +9,14 @@ Módulo Python para la silabificación de palabras y textos.
 >>> syllabify("arcançía")
 ['ar', 'can', 'çí', 'a']
 >>> hyphenate("¡Andalûh EPA!")
-'¡an-da-lûh e-pa!'
+'¡an·da·lûh e·pa!'
 ```
 
 `syllabify()` procesa una única unidad de palabra y devuelve sus sílabas como
 lista. `hyphenate()` procesa texto completo y devuelve las fronteras silábicas
-calculadas como guiones, conservando la puntuación, los espacios y los saltos
-de línea. Las funciones normalizan las mayúsculas de las palabras analizadas.
-También admiten guiones ortográficos interiores, como en `l-l`.
+calculadas como interpunctos (`·`), conservando la puntuación, los espacios,
+los saltos de línea y los guiones ortográficos interiores, como en `l-l`. Las
+funciones normalizan las mayúsculas de las palabras analizadas.
 
 La librería no valida si la grafía recibida pertenece al estándar EPA:
 silabifica de forma tolerante préstamos, grafías heredadas y caracteres
@@ -33,8 +33,8 @@ make try
 ```
 
 Escribe una palabra EPA y pulsa Intro. El comando devuelve las sílabas
-separadas por guiones y queda esperando la siguiente palabra. Pulsa Intro sin
-escribir texto para salir.
+separadas por interpunctos (`·`) y queda esperando la siguiente palabra. Pulsa
+Intro sin escribir texto para salir.
 
 ## Desarrollo
 

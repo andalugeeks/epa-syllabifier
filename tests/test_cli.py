@@ -14,7 +14,7 @@ def test_run_syllabifies_each_input_line():
 
     run(source, target)
 
-    assert target.getvalue() == "an-da-lûh\nguau\n"
+    assert target.getvalue() == "an·da·lûh\nguau\n"
 
 
 def test_run_reports_multiple_words_and_continues():
@@ -24,7 +24,7 @@ def test_run_reports_multiple_words_and_continues():
     run(source, target)
 
     assert target.getvalue() == (
-        "Error: word must be a single unit without whitespace\n" "dí-a\n"
+        "Error: word must be a single unit without whitespace\n" "dí·a\n"
     )
 
 
@@ -34,7 +34,7 @@ def test_run_interactive_session_exits_cleanly_on_eof():
 
     run(source, target, interactive=True)
 
-    assert target.getvalue() == f"{WELCOME}\n{PROMPT}tí-o\n{PROMPT}\n"
+    assert target.getvalue() == f"{WELCOME}\n{PROMPT}tí·o\n{PROMPT}\n"
 
 
 def test_main_uses_standard_streams(monkeypatch):
@@ -45,4 +45,4 @@ def test_main_uses_standard_streams(monkeypatch):
 
     main()
 
-    assert target.getvalue() == "cau-sa\n"
+    assert target.getvalue() == "cau·sa\n"
