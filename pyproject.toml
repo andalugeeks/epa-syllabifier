@@ -29,6 +29,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.scripts]
+epa-syllabifier = "epa_syllabifier.cli:main"
+
 [project.urls]
 "Homepage" = "https://github.com/andalugeeks/epa-syllabifier"
 "Bug Tracker" = "https://github.com/andalugeeks/epa-syllabifier/issues"

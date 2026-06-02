@@ -24,6 +24,18 @@ desconocidos. `syllabify()` produce un error `ValueError` con frases o entradas
 con espacios interiores; para procesar más de una palabra se utiliza
 `hyphenate()`.
 
+### Prueba manual
+
+Para revisar palabras una a una desde la terminal:
+
+```bash
+make try
+```
+
+Escribe una palabra EPA y pulsa Intro. El comando devuelve las sílabas
+separadas por guiones y queda esperando la siguiente palabra. Pulsa Intro sin
+escribir texto para salir.
+
 ## Desarrollo
 
 ### Instalación para desarrollo

@@ -1,6 +1,6 @@
 # Makefile for the epa-syllabifier project
 
-.PHONY: help venv activate ensure-venv check-uv install install-dev test test-verbose test-coverage test-properties test-matrix format lint check-whitespace clean clean-venv build ci-local all dev-setup quick-test test-file
+.PHONY: help venv activate ensure-venv check-uv install install-dev test test-verbose test-coverage test-properties test-matrix format lint check-whitespace clean clean-venv build ci-local all dev-setup quick-test test-file try
 
 # Variables
 VENV_DIR := .venv
@@ -145,6 +145,9 @@ dev-setup: install-dev ## Quick setup for development (create venv and install d
 
 quick-test: install-dev ## Quick test without detailed output
 	$(VENV_PYTHON) -m pytest -q -m "not properties" tests/
+
+try: ensure-venv ## Start an interactive manual syllabification session
+	$(VENV_PYTHON) -c "from epa_syllabifier.cli import main; main()"
 
 # Command to run a specific test
 # Usage: make test-file FILE=test_syllabifier.py
