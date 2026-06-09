@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic syllabification functionality
 - Test suite with pytest
 - Project configuration with pyproject.toml
+## v0.4.0 (2026-06-09)
+
+### Feat
+
+- add interactive syllabification CLI
+- hyphenate text and support vowel nuclei
+- support tolerant word syllabification
+- support EPA grave-accented vowels
+
+### Fix
+
+- preserve EPA orthographic hyphens
+- sanitize syllabifier inputs and tooling
+
 ## v0.3.0 (2025-06-24)
 
 ### Feat
