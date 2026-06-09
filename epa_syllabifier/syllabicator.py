@@ -2,17 +2,22 @@
 Syllabification algorithm based on the alphabet of the Epa language.
 """
 
+import re
+
 V_OPEN_BASE: set = {"a", "e", "o"}
 V_OPEN_ACCE: set = {"á", "é", "ó"}
 V_OPEN_CIRC: set = {"â", "ê", "ô"}
+V_OPEN_DIAC: set = {"à", "è", "ò"}
 
-V_OPEN_FULL: set = V_OPEN_BASE | V_OPEN_ACCE | V_OPEN_CIRC
+V_OPEN_FULL: set = V_OPEN_BASE | V_OPEN_ACCE | V_OPEN_CIRC | V_OPEN_DIAC
 
 V_CLOS_BASE: set = {"i", "u"}
 V_CLOS_ACCE: set = {"í", "ú"}
 V_CLOS_CIRC: set = {"î", "û"}
+V_CLOS_DIAC: set = {"ì", "ù"}
 
-V_CLOS_FULL: set = V_CLOS_BASE | V_CLOS_ACCE | V_CLOS_CIRC
+V_CLOS_FULL: set = V_CLOS_BASE | V_CLOS_ACCE | V_CLOS_CIRC | V_CLOS_DIAC
+V_CLOS_UNSTRESSED: set = V_CLOS_BASE | V_CLOS_CIRC | V_CLOS_DIAC
 
 V_FULL: set = V_OPEN_FULL | V_CLOS_FULL
 
@@ -29,13 +34,17 @@ C_LIQU: set = C_LIQU_LATE | C_LIQU_FLAP
 
 C_CODA: set = {"n", "h"}
 
-C_FULL: set = C_PLOS_ALVE | C_OBST_LIQU | C_LIQU | C_CODA | {"ç", "x", "y", "m", "ñ", "s", "z"}
+C_FULL: set = (
+    C_PLOS_ALVE | C_OBST_LIQU | C_LIQU | C_CODA | {"ç", "x", "y", "m", "ñ", "s", "z"}
+)
 
 
 FULL_SET: set = V_FULL | C_FULL
+WORD_PATTERN = re.compile(r"[^\W_]+(?:-[^\W_]+)*", flags=re.UNICODE)
+SYLLABLE_SEPARATOR = "·"
 
 
-def unpack_list(l: list[str|list[str]]) -> list[str]:
+def unpack_list(l: list[str | list[str]]) -> list[str]:
     """
     From a list[str|list[str]], turns the inner list[str] into a merged str item.
     Example: unpack_list(["a", ["b", "c"]]) -> ["a", "bc"]
@@ -59,8 +68,8 @@ def rule(w: list[str], lower, upper, range) -> list[str]:
     l: list = []
     i: int = 0
     while i < len(w):
-        if w[i][-1] in lower and i + 1 < len(w) and w[i+1][0] in upper:
-            l.append(w[i:i+r])
+        if w[i][-1] in lower and i + 1 < len(w) and w[i + 1][0] in upper:
+            l.append(w[i : i + r])
             i += r
         else:
             l.append(w[i])
@@ -68,33 +77,137 @@ def rule(w: list[str], lower, upper, range) -> list[str]:
     return unpack_list(l)
 
 
-def syllabify(x: str) -> list:
-
+def syllabify(word: str) -> list[str]:
     """
-    Given a string in EPA, splits by syllables.
+    Given a word, splits it by syllables.
     Example: syllabify("andalûh") -> ['an', 'da', 'lûh']
     """
 
-    x: str = " " if len(x) == 0 else x
+    if not isinstance(word, str):
+        raise TypeError("word must be a string")
 
-    x: str = x.lower()
-    x: str = x.strip()
-    x: str = x.replace("-", "")
-    x: list[str] = list(x)
+    word = word.lower().strip()
+    if len(word) == 0:
+        return []
 
-    x: list[str] = rule(x, "q", "u", "inclusive")                  # qu
-    x: list[str] = rule(x, "r", "r", "inclusive")                  # rr
-    x: list[str] = rule(x, C_OBST_LIQU, C_LIQU, "inclusive")       # /p, k, b, g, f/ + /r, l/
+    if any(character.isspace() for character in word):
+        raise ValueError("word must be a single unit without whitespace")
+
+    return _syllabify_unit(word.replace("-", ""))
+
+
+def hyphenate(text: str) -> str:
+    """
+    Given a text, returns its syllables separated by interpuncts.
+    Example: hyphenate("¡Andalûh EPA!") -> "¡an·da·lûh e·pa!"
+    """
+
+    if not isinstance(text, str):
+        raise TypeError("text must be a string")
+
+    return WORD_PATTERN.sub(lambda match: _hyphenate_word(match.group()), text)
+
+
+def _hyphenate_word(word: str) -> str:
+    syllable_boundaries: set[int] = set()
+    position: int = 0
+    for syllable in syllabify(word)[:-1]:
+        position += len(syllable)
+        syllable_boundaries.add(position)
+
+    orthographic_boundaries: set[int] = set()
+    position = 0
+    for character in word:
+        if character == "-":
+            orthographic_boundaries.add(position)
+        else:
+            position += 1
+
+    rendered: list[str] = []
+    position = 0
+    for character in word.lower():
+        if character == "-":
+            rendered.append(character)
+            continue
+        if position in syllable_boundaries and position not in orthographic_boundaries:
+            rendered.append(SYLLABLE_SEPARATOR)
+        rendered.append(character)
+        position += 1
+
+    return "".join(rendered)
+
+
+def _is_diphthong(first: str, second: str) -> bool:
+    if first in V_CLOS_ACCE or second in V_CLOS_ACCE:
+        return False
+
+    return first in V_CLOS_UNSTRESSED or second in V_CLOS_UNSTRESSED
+
+
+def _is_triphthong(first: str, second: str, third: str) -> bool:
+    return (
+        first in V_CLOS_UNSTRESSED
+        and second in V_OPEN_FULL
+        and third in V_CLOS_UNSTRESSED
+    )
+
+
+def _group_vowels(tokens: list[str]) -> list[str]:
+    grouped: list[str] = []
+    i: int = 0
+    while i < len(tokens):
+        if (
+            i + 2 < len(tokens)
+            and tokens[i][-1] in V_FULL
+            and tokens[i + 1][0] in V_FULL
+            and tokens[i + 2][0] in V_FULL
+            and _is_triphthong(
+                tokens[i][-1],
+                tokens[i + 1][0],
+                tokens[i + 2][0],
+            )
+        ):
+            grouped.append("".join(tokens[i : i + 3]))
+            i += 3
+            continue
+
+        if (
+            i + 1 < len(tokens)
+            and tokens[i][-1] in V_FULL
+            and tokens[i + 1][0] in V_FULL
+            and _is_diphthong(tokens[i][-1], tokens[i + 1][0])
+        ):
+            grouped.append("".join(tokens[i : i + 2]))
+            i += 2
+            continue
+
+        grouped.append(tokens[i])
+        i += 1
+
+    return grouped
+
+
+def _syllabify_unit(word: str) -> list[str]:
+    x: list[str] = list(word)
+
+    x: list[str] = rule(x, "q", "u", "inclusive")  # qu
+    x: list[str] = rule(x, "r", "r", "inclusive")  # rr
+    x: list[str] = rule(x, C_OBST_LIQU, C_LIQU, "inclusive")  # /p, k, b, g, f/ + /r, l/
     x: list[str] = rule(x, C_PLOS_ALVE, C_LIQU_FLAP, "inclusive")  # /d, t/ + /r/
-    x: list[str] = rule(x, V_CLOS_FULL, V_OPEN_FULL, "exclusive")  # /i, u/ + /a, e, o/
-    x: list[str] = rule(x, C_FULL, V_FULL, "exclusive")            # CV
+    x: list[str] = _group_vowels(x)
+    x: list[str] = rule(x, C_FULL, V_FULL, "exclusive")  # CV
 
     # handles n and h in coda position
     l: list = []
     i: int = 0
     while i < len(x):
-        if x[i][-1] in V_FULL and i + 2 < len(x) and x[i+1] in C_CODA and x[i+2][0] not in V_FULL:
-            l.append(x[i:i+2])
+        if (
+            x[i][-1] in V_FULL
+            and i + 2 < len(x)
+            and x[i + 1] in C_CODA
+            and x[i + 2][0] not in V_FULL
+        ):
+            l.append(x[i : i + 2])
             i += 2
         else:
             l.append(x[i])
@@ -107,24 +220,25 @@ def syllabify(x: str) -> list:
         l.pop()
 
     # handles coda r and m
-    for i in range(len(l)):
-        if len(l[i]) == 1 and i + 1 < len(l) and i != 0:
-            if l[i] in "r" or l[i] in "m":
-                if l[i+1][0] in C_FULL and l[i-1][-1] in V_FULL:
-                    l[i-1] = l[i-1] + l[i]
-                    l[i] = ""
-    l: list[str] = [i for i in l if i != ""]
+    i: int = 1
+    while i + 1 < len(l):
+        if len(l[i]) == 1 and l[i] in {"r", "m"}:
+            if l[i + 1][0] in C_FULL and l[i - 1][-1] in V_FULL:
+                l[i - 1] = l[i - 1] + l.pop(i)
+                continue
+        i += 1
 
-    # handles germination for coda syllable
-    for i in range(len(l)):
-        if len(l[i]) == 1 and i + 1 < len(l) and i != 0:
-            if l[i] == l[i+1][0]:
-                l[i-1] = l[i-1] + l[i]
-                l[i] = ""
-            elif l[i] == l[i-1][-1]:
-                l[i+1] = l[i] + l[i+1]
-                l[i] = ""
-    l: list[str] = [i for i in l if i != ""]
-
+    # handles gemination for coda syllable
+    i: int = 1
+    while i + 1 < len(l):
+        if len(l[i]) == 1:
+            if l[i] == l[i + 1][0]:
+                l[i - 1] = l[i - 1] + l.pop(i)
+                continue
+            if l[i] == l[i - 1][-1]:
+                l[i + 1] = l[i] + l[i + 1]
+                l.pop(i)
+                continue
+        i += 1
 
     return l
